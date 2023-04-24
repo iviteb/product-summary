@@ -12,6 +12,8 @@ import {
   ProductSummaryContext,
   ProductSummaryTypes,
 } from 'vtex.product-summary-context'
+import { useRuntime } from 'vtex.render-runtime'
+import { useSearchPage } from 'vtex.search-page-context/SearchPageContext'
 
 import ImagePlaceholder from './components/ImagePlaceholder'
 import productSummary from './productSummary.css'
@@ -294,6 +296,19 @@ interface Props {
   classes?: CssHandlesTypes.CustomClasses<typeof CSS_HANDLES>
 }
 
+// const parseCategoryName = (name: string) => {
+//   if (!name) {
+//     return
+//   }
+//   const splitWords = name.split("-")
+
+//   const upperCaseWords = splitWords.map((word: string) => {
+//     return word[0].toUpperCase() + word.substring(1);
+//   })
+
+//   return upperCaseWords.join(" ")
+// }
+
 function ProductImage({
   showBadge = true,
   badgeText,
@@ -309,6 +324,19 @@ function ProductImage({
   maxHeight: maxHeightProp,
   classes,
 }: Props) {
+  const { route } = useRuntime()
+  const { searchQuery } = useSearchPage()
+
+  const isHomePage = route?.id?.includes('store.home')
+  const isDepartmentPage = route?.id?.includes('store.search#department')
+  const isCateogryPage = route?.id?.includes('store.search#category')
+  const isSubCateogryPage = route?.id?.includes('store.search#subcategory')
+
+  const categoryTitle = searchQuery?.data?.productSearch?.breadcrumb || searchQuery?.data?.facets?.breadcrumb
+  const departmentName = categoryTitle?.[0]?.name
+  const categoryName = categoryTitle?.[1]?.name
+  const subCatName = categoryTitle?.[2]?.name
+
   const { product } = useProductSummary()
   const { handles, withModifiers } = useCssHandles(CSS_HANDLES, { classes })
 
@@ -321,6 +349,17 @@ function ProductImage({
 
   const { productClusters, productName: name } = product ?? {}
   const sku = product?.sku
+
+  let alt = name
+  if (isHomePage) {
+    alt = `${name} - Marketplace online - Infinity.ro`
+  } else if (isDepartmentPage) {
+    alt = `${departmentName} - Infinity.ro`
+  } else if (isCateogryPage) {
+    alt = `${departmentName} - ${categoryName} - Infinity.ro`
+  } else if (isSubCateogryPage) {
+    alt = `${departmentName} - ${categoryName} - ${subCatName} - Infinity.ro`
+  }
 
   const {
     widthProp: responsiveWidth,
@@ -388,10 +427,10 @@ function ProductImage({
       typeof mainImageLabel === 'string'
         ? findImageByLabel(images, mainImageLabel)
         : findImageByLabel(
-            images,
-            mainImageLabel.label,
-            mainImageLabel.labelMatchCriteria
-          )
+          images,
+          mainImageLabel.label,
+          mainImageLabel.labelMatchCriteria
+        )
 
     if (mainImage) {
       skuImageUrl = mainImage.imageUrl
@@ -437,7 +476,7 @@ function ProductImage({
               height={height}
               aspectRatio={aspectRatio}
               maxHeight={maxHeight}
-              alt={name}
+              alt={alt}
               className={imageClassname}
               onError={onError}
             />
@@ -448,7 +487,7 @@ function ProductImage({
                 height={height}
                 aspectRatio={aspectRatio}
                 maxHeight={maxHeight}
-                alt={name}
+                alt={alt}
                 className={hoverImageClassname}
                 onError={onError}
               />
