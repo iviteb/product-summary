@@ -92,9 +92,7 @@ function ProductSummaryCustom({
   useEffect(() => {
     if (position) {
       dispatch({
-        // @ts-expect-error - Depends on vtex.product-summary-context update on PR: https://github.com/vtex-apps/product-summary-context/pull/25
         type: 'SET_POSITION',
-        // @ts-expect-error - Depends on vtex.product-summary-context update on PR: https://github.com/vtex-apps/product-summary-context/pull/25
         args: { position },
       })
     }
