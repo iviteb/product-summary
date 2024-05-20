@@ -8,6 +8,7 @@ import type { ResponsiveValuesTypes } from 'vtex.responsive-values'
 import type { ProductTypes } from 'vtex.product-context'
 
 import { getDefaultSeller } from './modules/seller'
+import { sizes } from './utils/sizes'
 
 const { useProductSummary, useProductSummaryDispatch } = ProductSummaryContext
 
@@ -30,6 +31,32 @@ const CSS_HANDLES = [
   'skuSelectorTextContainer',
   'valueWrapper',
 ] as const
+
+interface SKU {
+  name: string
+  itemId: string
+  ean: string
+  referenceId: [
+    {
+      Value: string
+    }
+  ]
+  sellers: ProductSummaryTypes.Seller[]
+  images: Image[]
+  variations: Array<{
+    name: string
+    values: string[]
+  }>
+}
+
+interface Image {
+  cacheId: string
+  imageId: string
+  imageLabel: string
+  imageTag: string
+  imageText: string
+  imageUrl: string
+}
 
 interface Props {
   skuItems: ProductTypes.Item[]
@@ -209,6 +236,33 @@ function ProductSummarySKUSelector(props: Props) {
       type: 'SET_PRODUCT_QUERY',
       args: { query: `skuId=${skuId}` },
     })
+  }
+
+  if (product.skuSpecifications.length > 0) {
+    if (sizes.includes(product.skuSpecifications[0].values[0].name)) {
+      const sortedArray = product.skuSpecifications[0].values.sort(
+        (a, b) => sizes.indexOf(a.name) - sizes.indexOf(b.name)
+      )
+
+      product.skuSpecifications[0].values = sortedArray
+    } else {
+      const sortedArray = product.skuSpecifications[0].values.sort(
+        (a, b) => parseFloat(a.name) - parseFloat(b.name)
+      )
+
+      product.skuSpecifications[0].values = sortedArray
+    }
+  }
+
+  if (product.items.length > 1 && product.skuSpecifications.length === 0) {
+    const items = product.items as SKU[]
+    const sortedArray = items.sort(
+      (a, b) =>
+        sizes.indexOf(a.variations[0]?.values[0]) -
+        sizes.indexOf(b.variations[0]?.values[0])
+    )
+
+    product.items = sortedArray
   }
 
   return (
